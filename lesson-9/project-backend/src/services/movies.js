@@ -3,8 +3,8 @@ import MovieCollection from "../db/models/Movie.js";
 import { calculatePaginationData } from "../utils/calculatePaginationData.js";
 
 export const getMovies = async ({page = 1, perPage = 10, sortBy = "_id", sortOrder = "asc", filter = {}})=> {
-    const skip = (page - 1) * perPage;
-    const query = MovieCollection.find().skip(skip).limit(perPage).sort({[sortBy]: sortOrder});
+    const query = MovieCollection.find();
+
     if(filter.minReleaseYear) {
         query.where("releaseYear").gte(filter.minReleaseYear);
     }
@@ -12,8 +12,11 @@ export const getMovies = async ({page = 1, perPage = 10, sortBy = "_id", sortOrd
         query.where("releaseYear").lte(filter.maxReleaseYear);
     }
 
-    const data = await query;
     const totalItems = await MovieCollection.find().merge(query).countDocuments();
+
+    const skip = (page - 1) * perPage;
+    const data = await query.skip(skip).limit(perPage).sort({[sortBy]: sortOrder});;
+
     const paginationData = calculatePaginationData({totalItems, page, perPage});
 
     return {
